@@ -20,8 +20,25 @@ const SIZE_PRESETS: Record<SizeKey, { cols: number; rows: number; label: string 
 
 const BG = '#0b0f17'
 const GRID_LINE = 'rgba(148, 163, 184, 0.06)'
-const CELL_FILL = '#7dd3fc'
-const CELL_GLOW = 'rgba(56, 189, 248, 0.35)'
+const DEFAULT_CELL_COLOR = '#7dd3fc'
+const COLOR_PRESETS = [
+  { name: 'Sky', value: '#7dd3fc' },
+  { name: 'Violet', value: '#c4b5fd' },
+  { name: 'Emerald', value: '#6ee7b7' },
+  { name: 'Rose', value: '#fda4af' },
+  { name: 'Amber', value: '#fcd34d' },
+  { name: 'Pink', value: '#f9a8d4' },
+  { name: 'Lime', value: '#bef264' },
+  { name: 'Ghost', value: '#e2e8f0' },
+]
+
+function hexToGlow(hex: string, alpha = 0.4): string {
+  const m = hex.replace('#', '')
+  const r = parseInt(m.slice(0, 2), 16)
+  const g = parseInt(m.slice(2, 4), 16)
+  const b = parseInt(m.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
 
 export function GameOfLife() {
   const [sizeKey, setSizeKey] = useState<SizeKey>('M')
@@ -64,6 +81,11 @@ export function GameOfLife() {
   const [fps, setFps] = useState(0)
   const [cellPx, setCellPx] = useState(10)
   const [tool, setTool] = useState<'paint' | 'erase'>('paint')
+  const [cellColor, setCellColor] = useState<string>(DEFAULT_CELL_COLOR)
+
+  useEffect(() => {
+    dirtyRef.current = true
+  }, [cellColor])
 
   const generationRef = useRef(0)
   const tickAccumulatorRef = useRef(0)
@@ -148,8 +170,8 @@ export function GameOfLife() {
 
     // Live cells
     const inset = cellPx >= 6 ? 1 : 0
-    ctx.fillStyle = CELL_FILL
-    ctx.shadowColor = CELL_GLOW
+    ctx.fillStyle = cellColor
+    ctx.shadowColor = hexToGlow(cellColor, 0.45)
     ctx.shadowBlur = cellPx >= 8 ? 6 : 0
     const { cells, cols: c, rows: r } = grid
     for (let y = 0; y < r; y++) {
@@ -160,7 +182,7 @@ export function GameOfLife() {
       }
     }
     ctx.shadowBlur = 0
-  }, [cellPx])
+  }, [cellPx, cellColor])
 
   // Main animation loop. We run at display refresh rate (rAF) and advance the
   // simulation based on an accumulator timed against the user's target ticks
@@ -403,6 +425,8 @@ export function GameOfLife() {
           onPatternSelect={onPatternSelect}
           tool={tool}
           setTool={setTool}
+          cellColor={cellColor}
+          setCellColor={setCellColor}
         />
 
         <div
@@ -430,6 +454,88 @@ export function GameOfLife() {
           </p>
         </div>
       </div>
+
+      <section className="rounded-2xl border border-ink-700/80 bg-ink-900/40 p-5 sm:p-6 backdrop-blur-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-slate-100">About Conway&apos;s Game of Life</h2>
+          <a
+            href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-ink-700 bg-ink-800 px-3 py-1.5 text-xs font-medium text-sky-300 hover:border-sky-500/60 hover:text-sky-200"
+          >
+            Read on Wikipedia
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M14 3h7v7M10 14L21 3M21 14v7H3V3h7" />
+            </svg>
+          </a>
+        </div>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
+          Devised in 1970 by British mathematician John Horton Conway, the Game of Life is a zero-player
+          cellular automaton. Its evolution is determined entirely by its initial state — no further input
+          required. Despite the trivially simple rules below, the system is Turing-complete and produces
+          an astonishing variety of patterns: still lifes, oscillators, spaceships, guns, and self-replicators.
+        </p>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <RuleCard
+            symbol="−"
+            title="Underpopulation"
+            body="A live cell with fewer than 2 live neighbors dies."
+            tone="rose"
+          />
+          <RuleCard
+            symbol="="
+            title="Survival"
+            body="A live cell with 2 or 3 live neighbors stays alive."
+            tone="emerald"
+          />
+          <RuleCard
+            symbol="+"
+            title="Overpopulation"
+            body="A live cell with more than 3 live neighbors dies."
+            tone="amber"
+          />
+          <RuleCard
+            symbol="✱"
+            title="Reproduction"
+            body="A dead cell with exactly 3 live neighbors becomes alive."
+            tone="sky"
+          />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function RuleCard({
+  symbol,
+  title,
+  body,
+  tone,
+}: {
+  symbol: string
+  title: string
+  body: string
+  tone: 'rose' | 'emerald' | 'amber' | 'sky'
+}) {
+  const toneMap = {
+    rose: 'text-rose-300 bg-rose-500/10 border-rose-500/30',
+    emerald: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30',
+    amber: 'text-amber-300 bg-amber-500/10 border-amber-500/30',
+    sky: 'text-sky-300 bg-sky-500/10 border-sky-500/30',
+  } as const
+  return (
+    <div className="flex gap-3 rounded-lg border border-ink-700/70 bg-ink-900/60 p-3">
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border font-bold ${toneMap[tone]}`}
+      >
+        {symbol}
+      </span>
+      <div>
+        <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
+        <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{body}</p>
+      </div>
     </div>
   )
 }
@@ -447,6 +553,8 @@ interface ToolbarProps {
   onPatternSelect: (e: React.ChangeEvent<HTMLSelectElement>) => void
   tool: 'paint' | 'erase'
   setTool: (t: 'paint' | 'erase') => void
+  cellColor: string
+  setCellColor: (c: string) => void
 }
 
 function Toolbar({
@@ -462,6 +570,8 @@ function Toolbar({
   onPatternSelect,
   tool,
   setTool,
+  cellColor,
+  setCellColor,
 }: ToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -553,6 +663,37 @@ function Toolbar({
           >
             Erase
           </button>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-md border border-ink-700 bg-ink-800 px-2 py-1">
+          <span className="text-[10px] uppercase tracking-wider text-slate-400">Cell</span>
+          <div className="flex items-center gap-1">
+            {COLOR_PRESETS.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => setCellColor(c.value)}
+                title={c.name}
+                aria-label={`Set cell color to ${c.name}`}
+                className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
+                  cellColor === c.value
+                    ? 'border-white ring-2 ring-white/70'
+                    : 'border-ink-700'
+                }`}
+                style={{ backgroundColor: c.value }}
+              />
+            ))}
+          </div>
+          <label className="ml-1 flex items-center" title="Custom color">
+            <span className="sr-only">Custom color</span>
+            <input
+              type="color"
+              value={cellColor}
+              onChange={(e) => setCellColor(e.target.value)}
+              className="h-5 w-6 cursor-pointer rounded border border-ink-700 bg-transparent p-0"
+              aria-label="Pick custom cell color"
+            />
+          </label>
         </div>
       </div>
     </div>
