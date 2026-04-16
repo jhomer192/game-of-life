@@ -12,10 +12,16 @@ import {
 import { PATTERNS, patternBounds, type Pattern } from '../lib/patterns'
 
 const TURF_TEAMS = [
-  { id: 1, name: 'Sky',     color: '#38bdf8' },
-  { id: 2, name: 'Rose',    color: '#fb7185' },
-  { id: 3, name: 'Emerald', color: '#34d399' },
-  { id: 4, name: 'Amber',   color: '#fbbf24' },
+  { id: 1,  name: 'Sky',     color: '#38bdf8' },
+  { id: 2,  name: 'Rose',    color: '#fb7185' },
+  { id: 3,  name: 'Emerald', color: '#34d399' },
+  { id: 4,  name: 'Amber',   color: '#fbbf24' },
+  { id: 5,  name: 'Violet',  color: '#a78bfa' },
+  { id: 6,  name: 'Fuchsia', color: '#e879f9' },
+  { id: 7,  name: 'Cyan',    color: '#22d3ee' },
+  { id: 8,  name: 'Lime',    color: '#a3e635' },
+  { id: 9,  name: 'Orange',  color: '#fb923c' },
+  { id: 10, name: 'Indigo',  color: '#818cf8' },
 ] as const
 const TURF_TEAM_COUNT = TURF_TEAMS.length
 
