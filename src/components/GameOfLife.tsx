@@ -492,7 +492,7 @@ export function GameOfLife() {
 
         <div
           ref={containerRef}
-          className="relative mx-auto flex min-h-[420px] w-full items-center justify-center overflow-hidden rounded-xl border border-ink-700/70 bg-ink-950/80 p-1"
+          className="relative mx-auto flex min-h-[260px] w-full items-center justify-center overflow-hidden rounded-xl border border-ink-700/70 bg-ink-950/80 p-1 sm:min-h-[420px]"
           style={{ aspectRatio: `${cols} / ${rows}` }}
         >
           <canvas
