@@ -6,9 +6,18 @@ import {
   randomizeGrid,
   stampPattern,
   step,
+  stepTurfWars,
   type Grid,
 } from '../lib/grid'
 import { PATTERNS, patternBounds, type Pattern } from '../lib/patterns'
+
+const TURF_TEAMS = [
+  { id: 1, name: 'Sky',     color: '#38bdf8' },
+  { id: 2, name: 'Rose',    color: '#fb7185' },
+  { id: 3, name: 'Emerald', color: '#34d399' },
+  { id: 4, name: 'Amber',   color: '#fbbf24' },
+] as const
+const TURF_TEAM_COUNT = TURF_TEAMS.length
 
 type SizeKey = 'S' | 'M' | 'L' | 'XL'
 const SIZE_PRESETS: Record<SizeKey, { cols: number; rows: number; label: string }> = {
@@ -82,10 +91,16 @@ export function GameOfLife() {
   const [cellPx, setCellPx] = useState(10)
   const [tool, setTool] = useState<'paint' | 'erase'>('paint')
   const [cellColor, setCellColor] = useState<string>(DEFAULT_CELL_COLOR)
+  const [turfWars, setTurfWars] = useState(false)
+  const [paintTeam, setPaintTeam] = useState<number>(1)
+  const turfWarsRef = useRef(turfWars)
+  useEffect(() => {
+    turfWarsRef.current = turfWars
+  }, [turfWars])
 
   useEffect(() => {
     dirtyRef.current = true
-  }, [cellColor])
+  }, [cellColor, turfWars])
 
   const generationRef = useRef(0)
   const tickAccumulatorRef = useRef(0)
@@ -170,19 +185,34 @@ export function GameOfLife() {
 
     // Live cells
     const inset = cellPx >= 6 ? 1 : 0
-    ctx.fillStyle = cellColor
-    ctx.shadowColor = hexToGlow(cellColor, 0.45)
-    ctx.shadowBlur = cellPx >= 8 ? 6 : 0
     const { cells, cols: c, rows: r } = grid
-    for (let y = 0; y < r; y++) {
-      for (let x = 0; x < c; x++) {
-        if (cells[y * c + x]) {
+
+    if (turfWars) {
+      ctx.shadowBlur = cellPx >= 8 ? 6 : 0
+      for (let y = 0; y < r; y++) {
+        for (let x = 0; x < c; x++) {
+          const v = cells[y * c + x]
+          if (!v) continue
+          const team = TURF_TEAMS[(v - 1) % TURF_TEAM_COUNT]
+          ctx.fillStyle = team.color
+          ctx.shadowColor = hexToGlow(team.color, 0.45)
           ctx.fillRect(x * cellPx + inset, y * cellPx + inset, cellPx - inset, cellPx - inset)
+        }
+      }
+    } else {
+      ctx.fillStyle = cellColor
+      ctx.shadowColor = hexToGlow(cellColor, 0.45)
+      ctx.shadowBlur = cellPx >= 8 ? 6 : 0
+      for (let y = 0; y < r; y++) {
+        for (let x = 0; x < c; x++) {
+          if (cells[y * c + x]) {
+            ctx.fillRect(x * cellPx + inset, y * cellPx + inset, cellPx - inset, cellPx - inset)
+          }
         }
       }
     }
     ctx.shadowBlur = 0
-  }, [cellPx, cellColor])
+  }, [cellPx, cellColor, turfWars])
 
   // Main animation loop. We run at display refresh rate (rAF) and advance the
   // simulation based on an accumulator timed against the user's target ticks
@@ -206,7 +236,11 @@ export function GameOfLife() {
         // Cap iterations per frame so a slow tab doesn't freeze us catching up.
         let iters = 0
         while (tickAccumulatorRef.current >= perTick && iters < 4) {
-          step(gridRef.current, nextRef.current)
+          if (turfWarsRef.current) {
+            stepTurfWars(gridRef.current, nextRef.current, TURF_TEAM_COUNT)
+          } else {
+            step(gridRef.current, nextRef.current)
+          }
           const tmp = gridRef.current
           gridRef.current = nextRef.current
           nextRef.current = tmp
@@ -278,7 +312,8 @@ export function GameOfLife() {
     const mode: 'paint' | 'erase' =
       tool === 'erase' ? 'erase' : current ? 'erase' : 'paint'
     paintingRef.current = mode
-    g.cells[y * g.cols + x] = mode === 'paint' ? 1 : 0
+    const paintValue = turfWars ? paintTeam : 1
+    g.cells[y * g.cols + x] = mode === 'paint' ? paintValue : 0
     lastPaintedRef.current = `${x},${y}`
     dirtyRef.current = true
     setLiveCount(countLive(g))
@@ -293,7 +328,8 @@ export function GameOfLife() {
     if (lastPaintedRef.current === key) return
     lastPaintedRef.current = key
     const g = gridRef.current
-    g.cells[y * g.cols + x] = paintingRef.current === 'paint' ? 1 : 0
+    const paintValue = turfWars ? paintTeam : 1
+    g.cells[y * g.cols + x] = paintingRef.current === 'paint' ? paintValue : 0
     dirtyRef.current = true
     setLiveCount(countLive(g))
   }
@@ -308,7 +344,11 @@ export function GameOfLife() {
   }
 
   const doStep = () => {
-    step(gridRef.current, nextRef.current)
+    if (turfWars) {
+      stepTurfWars(gridRef.current, nextRef.current, TURF_TEAM_COUNT)
+    } else {
+      step(gridRef.current, nextRef.current)
+    }
     const tmp = gridRef.current
     gridRef.current = nextRef.current
     nextRef.current = tmp
@@ -328,7 +368,7 @@ export function GameOfLife() {
   }
 
   const doRandomize = () => {
-    randomizeGrid(gridRef.current, 0.28)
+    randomizeGrid(gridRef.current, 0.28, turfWars ? TURF_TEAM_COUNT : 1)
     generationRef.current = 0
     setGeneration(0)
     setLiveCount(countLive(gridRef.current))
@@ -341,7 +381,7 @@ export function GameOfLife() {
     const { width, height } = patternBounds(pattern)
     const ox = Math.max(0, Math.floor((g.cols - width) / 2))
     const oy = Math.max(0, Math.floor((g.rows - height) / 2))
-    stampPattern(g, pattern, ox, oy, false)
+    stampPattern(g, pattern, ox, oy, false, turfWars ? paintTeam : 1)
     generationRef.current = 0
     setGeneration(0)
     setLiveCount(countLive(g))
@@ -400,6 +440,17 @@ export function GameOfLife() {
             A cellular automaton with four rules and infinite outcomes. Paint cells on a paused
             grid, load a pattern, or seed chaos and watch it evolve.
           </p>
+          <a
+            href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-ink-700 bg-ink-800/80 px-2.5 py-1 text-xs font-medium text-sky-300 transition-colors hover:border-sky-500/60 hover:text-sky-200"
+          >
+            Read on Wikipedia
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M14 3h7v7M10 14L21 3M21 14v7H3V3h7" />
+            </svg>
+          </a>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {stats.map((s) => (
@@ -427,6 +478,10 @@ export function GameOfLife() {
           setTool={setTool}
           cellColor={cellColor}
           setCellColor={setCellColor}
+          turfWars={turfWars}
+          setTurfWars={setTurfWars}
+          paintTeam={paintTeam}
+          setPaintTeam={setPaintTeam}
         />
 
         <div
@@ -456,28 +511,8 @@ export function GameOfLife() {
       </div>
 
       <section className="rounded-2xl border border-ink-700/80 bg-ink-900/40 p-5 sm:p-6 backdrop-blur-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-slate-100">About Conway&apos;s Game of Life</h2>
-          <a
-            href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-md border border-ink-700 bg-ink-800 px-3 py-1.5 text-xs font-medium text-sky-300 hover:border-sky-500/60 hover:text-sky-200"
-          >
-            Read on Wikipedia
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M14 3h7v7M10 14L21 3M21 14v7H3V3h7" />
-            </svg>
-          </a>
-        </div>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400">
-          Devised in 1970 by British mathematician John Horton Conway, the Game of Life is a zero-player
-          cellular automaton. Its evolution is determined entirely by its initial state — no further input
-          required. Despite the trivially simple rules below, the system is Turing-complete and produces
-          an astonishing variety of patterns: still lifes, oscillators, spaceships, guns, and self-replicators.
-        </p>
-
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <h2 className="text-lg font-semibold text-slate-100">The rules</h2>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <RuleCard
             symbol="−"
             title="Underpopulation"
@@ -503,6 +538,13 @@ export function GameOfLife() {
             tone="sky"
           />
         </div>
+        {turfWars && (
+          <p className="mt-4 rounded-md border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs text-violet-200">
+            <span className="font-semibold text-violet-100">Turf Wars active:</span> cells only
+            count <em>same-team</em> neighbors. A dead cell is born into a team only if exactly
+            three of its neighbors share that team color.
+          </p>
+        )}
       </section>
     </div>
   )
@@ -555,6 +597,10 @@ interface ToolbarProps {
   setTool: (t: 'paint' | 'erase') => void
   cellColor: string
   setCellColor: (c: string) => void
+  turfWars: boolean
+  setTurfWars: (v: boolean) => void
+  paintTeam: number
+  setPaintTeam: (t: number) => void
 }
 
 function Toolbar({
@@ -572,6 +618,10 @@ function Toolbar({
   setTool,
   cellColor,
   setCellColor,
+  turfWars,
+  setTurfWars,
+  paintTeam,
+  setPaintTeam,
 }: ToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -665,36 +715,76 @@ function Toolbar({
           </button>
         </div>
 
-        <div className="flex items-center gap-2 rounded-md border border-ink-700 bg-ink-800 px-2 py-1">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400">Cell</span>
-          <div className="flex items-center gap-1">
-            {COLOR_PRESETS.map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setCellColor(c.value)}
-                title={c.name}
-                aria-label={`Set cell color to ${c.name}`}
-                className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
-                  cellColor === c.value
-                    ? 'border-white ring-2 ring-white/70'
-                    : 'border-ink-700'
-                }`}
-                style={{ backgroundColor: c.value }}
+        {!turfWars ? (
+          <div className="flex items-center gap-2 rounded-md border border-ink-700 bg-ink-800 px-2 py-1">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400">Cell</span>
+            <div className="flex items-center gap-1">
+              {COLOR_PRESETS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setCellColor(c.value)}
+                  title={c.name}
+                  aria-label={`Set cell color to ${c.name}`}
+                  className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
+                    cellColor === c.value
+                      ? 'border-white ring-2 ring-white/70'
+                      : 'border-ink-700'
+                  }`}
+                  style={{ backgroundColor: c.value }}
+                />
+              ))}
+            </div>
+            <label className="ml-1 flex items-center" title="Custom color">
+              <span className="sr-only">Custom color</span>
+              <input
+                type="color"
+                value={cellColor}
+                onChange={(e) => setCellColor(e.target.value)}
+                className="h-5 w-6 cursor-pointer rounded border border-ink-700 bg-transparent p-0"
+                aria-label="Pick custom cell color"
               />
-            ))}
+            </label>
           </div>
-          <label className="ml-1 flex items-center" title="Custom color">
-            <span className="sr-only">Custom color</span>
-            <input
-              type="color"
-              value={cellColor}
-              onChange={(e) => setCellColor(e.target.value)}
-              className="h-5 w-6 cursor-pointer rounded border border-ink-700 bg-transparent p-0"
-              aria-label="Pick custom cell color"
-            />
-          </label>
-        </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-md border border-ink-700 bg-ink-800 px-2 py-1">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400">Team</span>
+            <div className="flex items-center gap-1">
+              {TURF_TEAMS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setPaintTeam(t.id)}
+                  title={t.name}
+                  aria-label={`Paint as ${t.name} team`}
+                  className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
+                    paintTeam === t.id
+                      ? 'border-white ring-2 ring-white/70'
+                      : 'border-ink-700'
+                  }`}
+                  style={{ backgroundColor: t.color }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <label
+          className={`flex cursor-pointer select-none items-center gap-2 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
+            turfWars
+              ? 'border-violet-400/60 bg-violet-500/15 text-violet-200'
+              : 'border-ink-700 bg-ink-800 text-slate-400 hover:border-violet-500/50 hover:text-slate-200'
+          }`}
+          title="Same-team neighbors only. Four factions fight for the grid."
+        >
+          <input
+            type="checkbox"
+            checked={turfWars}
+            onChange={(e) => setTurfWars(e.target.checked)}
+            className="h-3 w-3 accent-violet-400"
+          />
+          Turf Wars
+        </label>
       </div>
     </div>
   )

@@ -34,23 +34,27 @@ export function clearGrid(grid: Grid): void {
   grid.cells.fill(0)
 }
 
-export function randomizeGrid(grid: Grid, density = 0.28): void {
+export function randomizeGrid(grid: Grid, density = 0.28, teams = 1): void {
   const { cells } = grid
   for (let i = 0; i < cells.length; i++) {
-    cells[i] = Math.random() < density ? 1 : 0
+    if (Math.random() < density) {
+      cells[i] = teams <= 1 ? 1 : 1 + Math.floor(Math.random() * teams)
+    } else {
+      cells[i] = 0
+    }
   }
 }
 
 export function countLive(grid: Grid): number {
   let count = 0
   const { cells } = grid
-  for (let i = 0; i < cells.length; i++) count += cells[i]
+  for (let i = 0; i < cells.length; i++) if (cells[i]) count++
   return count
 }
 
 /**
  * Advance the grid one generation into `next` (must be same dimensions).
- * Uses toroidal wrap-around so spaceships glide forever.
+ * Any non-zero cell counts as alive. Toroidal wrap-around.
  */
 export function step(grid: Grid, next: Grid): void {
   const { cols, rows, cells } = grid
@@ -67,19 +71,75 @@ export function step(grid: Grid, next: Grid): void {
       const xL = x === 0 ? cols - 1 : x - 1
       const xR = x === cols - 1 ? 0 : x + 1
 
-      const n =
-        cells[upBase + xL] +
-        cells[upBase + x] +
-        cells[upBase + xR] +
-        cells[rowBase + xL] +
-        cells[rowBase + xR] +
-        cells[dnBase + xL] +
-        cells[dnBase + x] +
-        cells[dnBase + xR]
+      const nUl = cells[upBase + xL] ? 1 : 0
+      const nU  = cells[upBase + x]  ? 1 : 0
+      const nUr = cells[upBase + xR] ? 1 : 0
+      const nL  = cells[rowBase + xL] ? 1 : 0
+      const nR  = cells[rowBase + xR] ? 1 : 0
+      const nDl = cells[dnBase + xL] ? 1 : 0
+      const nD  = cells[dnBase + x]  ? 1 : 0
+      const nDr = cells[dnBase + xR] ? 1 : 0
+
+      const n = nUl + nU + nUr + nL + nR + nDl + nD + nDr
+      const alive = cells[rowBase + x]
+      if (alive) {
+        out[rowBase + x] = n === 2 || n === 3 ? alive : 0
+      } else {
+        out[rowBase + x] = n === 3 ? 1 : 0
+      }
+    }
+  }
+}
+
+/**
+ * Turf Wars step: same-color (team) neighbors apply Conway's rules; cells of
+ * other teams are treated as empty. A dead cell becomes a given team only if
+ * it has exactly 3 neighbors of that team. A live cell survives only if 2 or
+ * 3 of its neighbors share its team color.
+ */
+export function stepTurfWars(grid: Grid, next: Grid, teams: number): void {
+  const { cols, rows, cells } = grid
+  const out = next.cells
+  const counts = new Uint8Array(teams + 1)
+
+  for (let y = 0; y < rows; y++) {
+    const yUp = y === 0 ? rows - 1 : y - 1
+    const yDn = y === rows - 1 ? 0 : y + 1
+    const rowBase = y * cols
+    const upBase = yUp * cols
+    const dnBase = yDn * cols
+
+    for (let x = 0; x < cols; x++) {
+      const xL = x === 0 ? cols - 1 : x - 1
+      const xR = x === cols - 1 ? 0 : x + 1
+
+      counts.fill(0)
+      const neighbors = [
+        cells[upBase + xL],
+        cells[upBase + x],
+        cells[upBase + xR],
+        cells[rowBase + xL],
+        cells[rowBase + xR],
+        cells[dnBase + xL],
+        cells[dnBase + x],
+        cells[dnBase + xR],
+      ]
+      for (const v of neighbors) if (v) counts[v]++
 
       const alive = cells[rowBase + x]
-      // B3/S23
-      out[rowBase + x] = n === 3 || (alive === 1 && n === 2) ? 1 : 0
+      if (alive) {
+        const same = counts[alive]
+        out[rowBase + x] = same === 2 || same === 3 ? alive : 0
+      } else {
+        let born = 0
+        for (let t = 1; t <= teams; t++) {
+          if (counts[t] === 3) {
+            born = t
+            break
+          }
+        }
+        out[rowBase + x] = born
+      }
     }
   }
 }
@@ -90,6 +150,7 @@ export function stampPattern(
   originX: number,
   originY: number,
   clearFirst = false,
+  team = 1,
 ): void {
   if (clearFirst) clearGrid(grid)
   const { cols, rows, cells } = grid
@@ -97,6 +158,6 @@ export function stampPattern(
     const x = originX + px
     const y = originY + py
     if (x < 0 || y < 0 || x >= cols || y >= rows) continue
-    cells[y * cols + x] = 1
+    cells[y * cols + x] = team
   }
 }
