@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Local-only: enabling this workflow requires the `workflow` OAuth scope on gh.
+# See README for instructions on how to commit it.
+.github/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

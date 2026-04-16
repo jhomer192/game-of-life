@@ -37,5 +37,19 @@ npm run lint     # run ESLint
 
 ## Deployment
 
-The included GitHub Actions workflow (`.github/workflows/deploy.yml`) builds
-the app and publishes `dist/` to GitHub Pages on every push to `main`.
+This repo is published to GitHub Pages from the `gh-pages` branch. To cut a
+new release:
+
+```bash
+npm run deploy
+```
+
+That runs the build, writes `dist/.nojekyll`, and force-pushes the output to
+`gh-pages`. GitHub Pages serves the site from that branch at
+<https://jhomer192.github.io/game-of-life/>.
+
+A ready-to-use GitHub Actions workflow lives at `.github/workflows/deploy.yml`
+(kept locally and gitignored). To switch to push-to-main automatic deploys,
+re-authenticate the `gh` CLI with the `workflow` scope (`gh auth refresh -s
+workflow`), commit the workflow file, and switch the Pages source to
+"GitHub Actions" under repository Settings -> Pages.
