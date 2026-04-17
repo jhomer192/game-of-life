@@ -1,3 +1,5 @@
+@import './themes.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -18,10 +20,10 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(1100px 550px at 15% -10%, rgba(56, 189, 248, 0.12), transparent 60%),
-    radial-gradient(900px 600px at 100% 110%, rgba(168, 85, 247, 0.10), transparent 55%),
-    #06080d;
-  color: #e5e7eb;
+    radial-gradient(1100px 550px at 15% -10%, var(--glow), transparent 60%),
+    radial-gradient(900px 600px at 100% 110%, rgba(203, 166, 247, 0.10), transparent 55%),
+    var(--bg-deep);
+  color: var(--text);
   overflow-x: hidden;
 }
 
@@ -41,12 +43,12 @@ input[type='range'] {
 }
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
-  background: linear-gradient(90deg, #38bdf8, #8b5cf6);
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
   border-radius: 999px;
 }
 input[type='range']::-moz-range-track {
   height: 4px;
-  background: linear-gradient(90deg, #38bdf8, #8b5cf6);
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
   border-radius: 999px;
 }
 input[type='range']::-webkit-slider-thumb {
@@ -55,30 +57,45 @@ input[type='range']::-webkit-slider-thumb {
   height: 16px;
   width: 16px;
   margin-top: -6px;
-  background: #e0f2fe;
-  border: 2px solid #0ea5e9;
+  background: var(--text);
+  border: 2px solid var(--accent);
   border-radius: 999px;
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.7);
+  box-shadow: 0 0 12px var(--glow);
   cursor: pointer;
 }
 input[type='range']::-moz-range-thumb {
   height: 16px;
   width: 16px;
-  background: #e0f2fe;
-  border: 2px solid #0ea5e9;
+  background: var(--text);
+  border: 2px solid var(--accent);
   border-radius: 999px;
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.7);
+  box-shadow: 0 0 12px var(--glow);
   cursor: pointer;
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-ink-700 bg-ink-800 px-3 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-cell-glow hover:bg-ink-700 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+  border-color: var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: white;
 }
 .btn-primary {
-  @apply border-cell-glow/70 bg-cell-glow/20 text-sky-100 hover:bg-cell-glow/30;
+  border-color: var(--accent);
+  background-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--text);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .chip {
-  @apply inline-flex items-center gap-2 rounded-md bg-ink-800/70 px-2.5 py-1 font-mono text-xs text-slate-300 ring-1 ring-ink-700;
+  @apply inline-flex items-center gap-2 rounded-md px-2.5 py-1 font-mono text-xs ring-1;
+  background-color: color-mix(in srgb, var(--surface) 70%, transparent);
+  color: var(--text-muted);
+  ring-color: var(--border);
 }
 
 /* Custom select style */

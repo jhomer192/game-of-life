@@ -1,0 +1,58 @@
+/* ── Theme definitions ─────────────────────────────────────────────── */
+
+/* Mocha (default) */
+[data-theme="mocha"],
+:root {
+  --bg:        #1e1e2e;
+  --bg-deep:   #11111b;
+  --surface:   #181825;
+  --surface2:  #1e1e2e;
+  --border:    #313244;
+  --text:      #cdd6f4;
+  --text-muted:#6c7086;
+  --accent:    #89b4fa;
+  --accent2:   #cba6f7;
+  --glow:      rgba(137, 180, 250, 0.35);
+}
+
+/* Tokyo Night */
+[data-theme="tokyo-night"] {
+  --bg:        #1a1b26;
+  --bg-deep:   #13131f;
+  --surface:   #16161e;
+  --surface2:  #1a1b26;
+  --border:    #2a2b3d;
+  --text:      #c0caf5;
+  --text-muted:#565f89;
+  --accent:    #7aa2f7;
+  --accent2:   #bb9af7;
+  --glow:      rgba(122, 162, 247, 0.35);
+}
+
+/* Dracula */
+[data-theme="dracula"] {
+  --bg:        #282a36;
+  --bg-deep:   #1e1f29;
+  --surface:   #21222c;
+  --surface2:  #282a36;
+  --border:    #44475a;
+  --text:      #f8f8f2;
+  --text-muted:#6272a4;
+  --accent:    #8be9fd;
+  --accent2:   #bd93f9;
+  --glow:      rgba(139, 233, 253, 0.35);
+}
+
+/* Nord */
+[data-theme="nord"] {
+  --bg:        #2e3440;
+  --bg-deep:   #242831;
+  --surface:   #3b4252;
+  --surface2:  #434c5e;
+  --border:    #4c566a;
+  --text:      #eceff4;
+  --text-muted:#616e88;
+  --accent:    #88c0d0;
+  --accent2:   #b48ead;
+  --glow:      rgba(136, 192, 208, 0.35);
+}

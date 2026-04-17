@@ -7,17 +7,25 @@ export default {
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       colors: {
+        // Theme-aware semantic tokens (CSS variables)
+        'theme-bg':      'var(--bg)',
+        'theme-surface': 'var(--surface)',
+        'theme-border':  'var(--border)',
+        'theme-text':    'var(--text)',
+        'theme-accent':  'var(--accent)',
+        'theme-accent2': 'var(--accent2)',
+        // Legacy ink/cell names now point at CSS variables so existing classes still work
         ink: {
-          950: '#06080d',
-          900: '#0b0f17',
-          800: '#111826',
-          700: '#1b2436',
-          600: '#2a364f',
+          950: 'var(--bg-deep)',
+          900: 'var(--surface)',
+          800: 'var(--surface2)',
+          700: 'var(--border)',
+          600: 'var(--border)',
         },
         cell: {
-          on: '#7dd3fc',
-          trail: '#38bdf8',
-          glow: '#0ea5e9',
+          on:   'var(--accent)',
+          trail:'var(--accent)',
+          glow: 'var(--accent)',
         },
       },
     },

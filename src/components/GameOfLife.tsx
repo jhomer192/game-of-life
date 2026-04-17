@@ -33,9 +33,20 @@ const SIZE_PRESETS: Record<SizeKey, { cols: number; rows: number; label: string 
   XL: { cols: 180, rows: 108, label: '180 x 108' },
 }
 
-const BG = '#0b0f17'
 const GRID_LINE = 'rgba(148, 163, 184, 0.06)'
-const DEFAULT_CELL_COLOR = '#7dd3fc'
+
+function getCssVar(name: string, fallback: string): string {
+  if (typeof window === 'undefined') return fallback
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+}
+
+function getDefaultCellColor(): string {
+  return getCssVar('--accent', '#89b4fa')
+}
+
+function getBgColor(): string {
+  return getCssVar('--bg-deep', '#11111b')
+}
 const COLOR_PRESETS = [
   { name: 'Sky', value: '#7dd3fc' },
   { name: 'Violet', value: '#c4b5fd' },
@@ -96,7 +107,21 @@ export function GameOfLife() {
   const [fps, setFps] = useState(0)
   const [cellPx, setCellPx] = useState(10)
   const [tool, setTool] = useState<'paint' | 'erase'>('paint')
-  const [cellColor, setCellColor] = useState<string>(DEFAULT_CELL_COLOR)
+  const [cellColor, setCellColor] = useState<string>(() => getDefaultCellColor())
+  const cellColorIsDefaultRef = useRef(true)
+
+  // When theme changes, update canvas background + cell color (if still on default)
+  useEffect(() => {
+    const handler = () => {
+      dirtyRef.current = true
+      if (cellColorIsDefaultRef.current) {
+        setCellColor(getDefaultCellColor())
+      }
+    }
+    document.documentElement.addEventListener('themechange', handler)
+    return () => document.documentElement.removeEventListener('themechange', handler)
+  }, [])
+
   const [turfWars, setTurfWars] = useState(false)
   const [paintTeam, setPaintTeam] = useState<number>(1)
   const turfWarsRef = useRef(turfWars)
@@ -168,7 +193,7 @@ export function GameOfLife() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     // Background
-    ctx.fillStyle = BG
+    ctx.fillStyle = getBgColor()
     ctx.fillRect(0, 0, w, h)
 
     // Grid lines (only when cells are large enough to be worth it)
@@ -439,10 +464,13 @@ export function GameOfLife() {
     <div className="mx-auto flex min-h-screen max-w-[1400px] flex-col gap-6 px-4 py-6 sm:px-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="bg-gradient-to-r from-sky-300 via-cyan-200 to-violet-300 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl">
+          <h1
+            className="bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-4xl"
+            style={{ backgroundImage: 'linear-gradient(to right, var(--accent), var(--accent2))' }}
+          >
             Conway&apos;s Game of Life
           </h1>
-          <p className="mt-1 max-w-xl text-sm text-slate-400">
+          <p className="mt-1 max-w-xl text-sm" style={{ color: 'var(--text-muted)' }}>
             A cellular automaton with four rules and infinite outcomes. Paint cells on a paused
             grid, load a pattern, or seed chaos and watch it evolve.
           </p>
@@ -450,7 +478,8 @@ export function GameOfLife() {
             href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-ink-700 bg-ink-800/80 px-2.5 py-1 text-xs font-medium text-sky-300 transition-colors hover:border-sky-500/60 hover:text-sky-200"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+            style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--surface) 80%, transparent)', color: 'var(--accent)' }}
           >
             Read on Wikipedia
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -461,14 +490,14 @@ export function GameOfLife() {
         <div className="flex flex-wrap items-center gap-2">
           {stats.map((s) => (
             <span key={s.label} className="chip">
-              <span className="text-slate-500">{s.label}</span>
-              <span className="text-slate-100">{s.value}</span>
+              <span style={{ color: 'var(--text-muted)' }}>{s.label}</span>
+              <span style={{ color: 'var(--text)' }}>{s.value}</span>
             </span>
           ))}
         </div>
       </header>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-ink-700/80 bg-ink-900/60 p-3 shadow-[0_0_40px_-15px_rgba(56,189,248,0.35)] backdrop-blur-sm sm:p-4">
+      <div className="flex flex-col gap-4 rounded-2xl border p-3 backdrop-blur-sm sm:p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--surface) 60%, transparent)', boxShadow: '0 0 40px -15px var(--glow)' }}>
         <Toolbar
           running={running}
           onToggleRun={() => setRunning((r) => !r)}
@@ -483,7 +512,7 @@ export function GameOfLife() {
           tool={tool}
           setTool={setTool}
           cellColor={cellColor}
-          setCellColor={setCellColor}
+          setCellColor={(c) => { cellColorIsDefaultRef.current = false; setCellColor(c) }}
           turfWars={turfWars}
           setTurfWars={setTurfWars}
           paintTeam={paintTeam}
@@ -492,8 +521,8 @@ export function GameOfLife() {
 
         <div
           ref={containerRef}
-          className="relative mx-auto flex min-h-[260px] w-full items-center justify-center overflow-hidden rounded-xl border border-ink-700/70 bg-ink-950/80 p-1 sm:min-h-[420px]"
-          style={{ aspectRatio: `${cols} / ${rows}` }}
+          className="relative mx-auto flex min-h-[260px] w-full items-center justify-center overflow-hidden rounded-xl border p-1 sm:min-h-[420px]"
+          style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--bg-deep) 80%, transparent)', aspectRatio: `${cols} / ${rows}` }}
         >
           <canvas
             ref={canvasRef}
@@ -505,9 +534,9 @@ export function GameOfLife() {
           />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
           <p>
-            <span className="text-slate-400">Tip:</span> drag to paint cells when paused. Space =
+            <span style={{ color: 'var(--text)' }}>Tip:</span> drag to paint cells when paused. Space =
             play/pause, S = step, R = randomize, C = clear.
           </p>
           <p>
@@ -516,8 +545,8 @@ export function GameOfLife() {
         </div>
       </div>
 
-      <section className="rounded-2xl border border-ink-700/80 bg-ink-900/40 p-5 sm:p-6 backdrop-blur-sm">
-        <h2 className="text-lg font-semibold text-slate-100">The rules</h2>
+      <section className="rounded-2xl border p-5 sm:p-6 backdrop-blur-sm" style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--surface) 40%, transparent)' }}>
+        <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>The rules</h2>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <RuleCard
             symbol="−"
@@ -574,15 +603,15 @@ function RuleCard({
     sky: 'text-sky-300 bg-sky-500/10 border-sky-500/30',
   } as const
   return (
-    <div className="flex gap-3 rounded-lg border border-ink-700/70 bg-ink-900/60 p-3">
+    <div className="flex gap-3 rounded-lg border p-3" style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--surface) 60%, transparent)' }}>
       <span
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border font-bold ${toneMap[tone]}`}
       >
         {symbol}
       </span>
       <div>
-        <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
-        <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{body}</p>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{title}</h3>
+        <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{body}</p>
       </div>
     </div>
   )
@@ -653,7 +682,7 @@ function Toolbar({
       </button>
 
       <div className="ml-auto flex flex-wrap items-center gap-2 sm:gap-3">
-        <label className="flex items-center gap-2 text-xs text-slate-400">
+        <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
           <span className="uppercase tracking-wider">Speed</span>
           <input
             type="range"
@@ -664,15 +693,16 @@ function Toolbar({
             className="w-28 sm:w-36"
             aria-label="Simulation speed"
           />
-          <span className="w-10 font-mono tabular-nums text-slate-200">{speed} fps</span>
+          <span className="w-10 font-mono tabular-nums" style={{ color: 'var(--text)' }}>{speed} fps</span>
         </label>
 
-        <label className="flex items-center gap-2 text-xs text-slate-400">
+        <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
           <span className="uppercase tracking-wider">Size</span>
           <select
             value={sizeKey}
             onChange={(e) => setSizeKey(e.target.value as SizeKey)}
-            className="rounded-md border border-ink-700 bg-ink-800 px-2 py-1 font-mono text-xs text-slate-200 outline-none hover:border-cell-glow focus:border-cell-glow"
+            className="rounded-md border px-2 py-1 font-mono text-xs outline-none"
+            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text)' }}
             aria-label="Grid size"
           >
             {Object.entries(SIZE_PRESETS).map(([k, v]) => (
@@ -683,12 +713,13 @@ function Toolbar({
           </select>
         </label>
 
-        <label className="flex items-center gap-2 text-xs text-slate-400">
+        <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
           <span className="uppercase tracking-wider">Pattern</span>
           <select
             defaultValue=""
             onChange={onPatternSelect}
-            className="rounded-md border border-ink-700 bg-ink-800 px-2 py-1 text-xs text-slate-200 outline-none hover:border-cell-glow focus:border-cell-glow"
+            className="rounded-md border px-2 py-1 text-xs outline-none"
+            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text)' }}
             aria-label="Load pattern"
           >
             <option value="">Load pattern...</option>
@@ -701,20 +732,27 @@ function Toolbar({
         </label>
 
         <div
-          className="inline-flex overflow-hidden rounded-md border border-ink-700 text-xs"
+          className="inline-flex overflow-hidden rounded-md border text-xs"
+          style={{ borderColor: 'var(--border)' }}
           role="group"
           aria-label="Paint tool"
         >
           <button
             type="button"
-            className={`px-2 py-1 ${tool === 'paint' ? 'bg-cell-glow/25 text-sky-100' : 'bg-ink-800 text-slate-400 hover:text-slate-200'}`}
+            className="px-2 py-1 transition-colors"
+            style={tool === 'paint'
+              ? { backgroundColor: 'color-mix(in srgb, var(--accent) 25%, transparent)', color: 'var(--text)' }
+              : { backgroundColor: 'var(--surface2)', color: 'var(--text-muted)' }}
             onClick={() => setTool('paint')}
           >
             Paint
           </button>
           <button
             type="button"
-            className={`border-l border-ink-700 px-2 py-1 ${tool === 'erase' ? 'bg-cell-glow/25 text-sky-100' : 'bg-ink-800 text-slate-400 hover:text-slate-200'}`}
+            className="border-l px-2 py-1 transition-colors"
+            style={tool === 'erase'
+              ? { borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--accent) 25%, transparent)', color: 'var(--text)' }
+              : { borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text-muted)' }}
             onClick={() => setTool('erase')}
           >
             Erase
@@ -722,8 +760,8 @@ function Toolbar({
         </div>
 
         {!turfWars ? (
-          <div className="flex items-center gap-2 rounded-md border border-ink-700 bg-ink-800 px-2 py-1">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400">Cell</span>
+          <div className="flex items-center gap-2 rounded-md border px-2 py-1" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)' }}>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Cell</span>
             <div className="flex items-center gap-1">
               {COLOR_PRESETS.map((c) => (
                 <button
@@ -735,7 +773,7 @@ function Toolbar({
                   className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
                     cellColor === c.value
                       ? 'border-white ring-2 ring-white/70'
-                      : 'border-ink-700'
+                      : 'border-transparent'
                   }`}
                   style={{ backgroundColor: c.value }}
                 />
@@ -747,14 +785,15 @@ function Toolbar({
                 type="color"
                 value={cellColor}
                 onChange={(e) => setCellColor(e.target.value)}
-                className="h-5 w-6 cursor-pointer rounded border border-ink-700 bg-transparent p-0"
+                className="h-5 w-6 cursor-pointer rounded border bg-transparent p-0"
+                style={{ borderColor: 'var(--border)' }}
                 aria-label="Pick custom cell color"
               />
             </label>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-md border border-ink-700 bg-ink-800 px-2 py-1">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400">Team</span>
+          <div className="flex items-center gap-2 rounded-md border px-2 py-1" style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)' }}>
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Team</span>
             <div className="flex items-center gap-1">
               {TURF_TEAMS.map((t) => (
                 <button
@@ -766,7 +805,7 @@ function Toolbar({
                   className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
                     paintTeam === t.id
                       ? 'border-white ring-2 ring-white/70'
-                      : 'border-ink-700'
+                      : 'border-transparent'
                   }`}
                   style={{ backgroundColor: t.color }}
                 />
@@ -776,11 +815,10 @@ function Toolbar({
         )}
 
         <label
-          className={`flex cursor-pointer select-none items-center gap-2 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
-            turfWars
-              ? 'border-violet-400/60 bg-violet-500/15 text-violet-200'
-              : 'border-ink-700 bg-ink-800 text-slate-400 hover:border-violet-500/50 hover:text-slate-200'
-          }`}
+          className="flex cursor-pointer select-none items-center gap-2 rounded-md border px-2 py-1 text-xs font-medium transition-colors"
+          style={turfWars
+            ? { borderColor: 'rgba(167,139,250,0.6)', backgroundColor: 'rgba(139,92,246,0.15)', color: '#ddd6fe' }
+            : { borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text-muted)' }}
           title="Same-team neighbors only. Four factions fight for the grid."
         >
           <input
