@@ -1,4 +1,4 @@
-const VALID_THEMES = ['mocha', 'tokyo-night', 'dracula', 'nord'] as const
+const VALID_THEMES = ['mocha', 'tokyo-night', 'miami', 'forest'] as const
 export type ThemeId = (typeof VALID_THEMES)[number]
 
 export function getStoredTheme(): ThemeId {
