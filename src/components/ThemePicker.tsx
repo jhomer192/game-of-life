@@ -1,14 +1,13 @@
 import { applyTheme, type ThemeId } from '../lib/theme'
 
 const THEMES: { id: ThemeId; label: string; accent: string; accent2: string }[] = [
-  { id: 'mocha',       label: 'Mocha',       accent: '#f5c2e7', accent2: '#cba6f7' },
-  { id: 'tokyo-night', label: 'Tokyo Night', accent: '#73daca', accent2: '#7aa2f7' },
-  { id: 'miami',       label: 'Miami',       accent: '#ff2d95', accent2: '#00f0ff' },
-  { id: 'forest',      label: 'Forest',      accent: '#8fbc6a', accent2: '#c9a96e' },
+  { id: 'tokyo',  label: 'Tokyo Night', accent: '#73daca', accent2: '#7aa2f7' },
+  { id: 'miami',  label: 'Miami',       accent: '#ff2d95', accent2: '#00f0ff' },
+  { id: 'matcha', label: 'Matcha',      accent: '#8db660', accent2: '#d4a852' },
 ]
 
 export function ThemePicker() {
-  const current = (document.documentElement.getAttribute('data-theme') ?? 'mocha') as ThemeId
+  const current = (document.documentElement.getAttribute('data-theme') ?? 'tokyo') as ThemeId
 
   return (
     <div
