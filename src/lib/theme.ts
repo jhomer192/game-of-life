@@ -1,4 +1,4 @@
-const VALID_THEMES = ['tokyo', 'miami', 'matcha'] as const
+const VALID_THEMES = ['tokyo', 'miami', 'matcha', 'gruvbox'] as const
 export type ThemeId = (typeof VALID_THEMES)[number]
 
 const OLD_THEMES = ['mocha', 'tokyo-night', 'dracula', 'nord', 'forest']

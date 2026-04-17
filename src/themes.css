@@ -42,3 +42,17 @@
   --accent2:   #d4a852;
   --glow:      rgba(141, 182, 96, 0.35);
 }
+
+/* Gruvbox */
+[data-theme="gruvbox"] {
+  --bg:        #282828;
+  --bg-deep:   #1d2021;
+  --surface:   #3c3836;
+  --surface2:  #504945;
+  --border:    #504945;
+  --text:      #ebdbb2;
+  --text-muted:#928374;
+  --accent:    #fb4934;
+  --accent2:   #fe8019;
+  --glow:      rgba(251, 73, 52, 0.35);
+}

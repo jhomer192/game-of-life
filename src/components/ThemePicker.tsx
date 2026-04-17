@@ -1,9 +1,10 @@
 import { applyTheme, type ThemeId } from '../lib/theme'
 
 const THEMES: { id: ThemeId; label: string; accent: string; accent2: string }[] = [
-  { id: 'tokyo',  label: 'Tokyo Night', accent: '#73daca', accent2: '#7aa2f7' },
-  { id: 'miami',  label: 'Miami',       accent: '#ff2d95', accent2: '#00f0ff' },
-  { id: 'matcha', label: 'Matcha',      accent: '#8db660', accent2: '#d4a852' },
+  { id: 'tokyo',   label: 'Tokyo Night', accent: '#73daca', accent2: '#7aa2f7' },
+  { id: 'miami',   label: 'Miami',       accent: '#ff2d95', accent2: '#00f0ff' },
+  { id: 'matcha',  label: 'Matcha',      accent: '#8db660', accent2: '#d4a852' },
+  { id: 'gruvbox', label: 'Gruvbox',     accent: '#fb4934', accent2: '#fe8019' },
 ]
 
 export function ThemePicker() {
