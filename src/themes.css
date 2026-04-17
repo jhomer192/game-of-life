@@ -5,42 +5,42 @@
 :root {
   --bg:        #1e1e2e;
   --bg-deep:   #11111b;
-  --surface:   #181825;
-  --surface2:  #1e1e2e;
-  --border:    #313244;
+  --surface:   #313244;
+  --surface2:  #45475a;
+  --border:    #45475a;
   --text:      #cdd6f4;
   --text-muted:#6c7086;
-  --accent:    #89b4fa;
+  --accent:    #f5c2e7;
   --accent2:   #cba6f7;
-  --glow:      rgba(137, 180, 250, 0.35);
+  --glow:      rgba(245, 194, 231, 0.35);
 }
 
 /* Tokyo Night */
 [data-theme="tokyo-night"] {
-  --bg:        #1a1b26;
-  --bg-deep:   #13131f;
-  --surface:   #16161e;
-  --surface2:  #1a1b26;
-  --border:    #2a2b3d;
+  --bg:        #16161e;
+  --bg-deep:   #101014;
+  --surface:   #1a1b26;
+  --surface2:  #292e42;
+  --border:    #3b4261;
   --text:      #c0caf5;
   --text-muted:#565f89;
-  --accent:    #7aa2f7;
-  --accent2:   #bb9af7;
-  --glow:      rgba(122, 162, 247, 0.35);
+  --accent:    #73daca;
+  --accent2:   #7aa2f7;
+  --glow:      rgba(115, 218, 202, 0.35);
 }
 
 /* Dracula */
 [data-theme="dracula"] {
   --bg:        #282a36;
   --bg-deep:   #1e1f29;
-  --surface:   #21222c;
-  --surface2:  #282a36;
-  --border:    #44475a;
+  --surface:   #44475a;
+  --surface2:  #4f5273;
+  --border:    #6272a4;
   --text:      #f8f8f2;
   --text-muted:#6272a4;
-  --accent:    #8be9fd;
+  --accent:    #ff79c6;
   --accent2:   #bd93f9;
-  --glow:      rgba(139, 233, 253, 0.35);
+  --glow:      rgba(255, 121, 198, 0.35);
 }
 
 /* Nord */
@@ -52,7 +52,7 @@
   --border:    #4c566a;
   --text:      #eceff4;
   --text-muted:#616e88;
-  --accent:    #88c0d0;
-  --accent2:   #b48ead;
-  --glow:      rgba(136, 192, 208, 0.35);
+  --accent:    #a3be8c;
+  --accent2:   #88c0d0;
+  --glow:      rgba(163, 190, 140, 0.35);
 }
