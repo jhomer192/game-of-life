@@ -1,58 +1,67 @@
-/* Theme definitions */
+/* Theme system -- CSS custom properties */
 
-/* Tokyo Night (default) */
-[data-theme="tokyo"],
-:root {
-  --bg:        #16161e;
-  --bg-deep:   #101014;
-  --surface:   #1a1b26;
-  --surface2:  #292e42;
-  --border:    #3b4261;
-  --text:      #c0caf5;
-  --text-muted:#565f89;
-  --accent:    #73daca;
-  --accent2:   #7aa2f7;
-  --glow:      rgba(115, 218, 202, 0.35);
+html,
+html[data-theme='tokyo'] {
+  --bg: #16161e;
+  --surface: #1a1b26;
+  --text: #a9b1d6;
+  --text-dim: #565f89;
+  --accent: #73daca;
+  --accent-2: #7aa2f7;
+  --accent-3: #bb9af7;
+  --border: #292e42;
+  /* Aliases for backward compat */
+  --bg-deep: #101014;
+  --surface2: #292e42;
+  --accent2: #7aa2f7;
+  --text-muted: #565f89;
+  --glow: rgba(115, 218, 202, 0.35);
 }
 
-/* Miami */
-[data-theme="miami"] {
-  --bg:        #0d0221;
-  --bg-deep:   #050110;
-  --surface:   #1a0a3e;
-  --surface2:  #2d1b69;
-  --border:    #3d2b7a;
-  --text:      #f0e6ff;
-  --text-muted:#7a6b94;
-  --accent:    #ff2d95;
-  --accent2:   #00f0ff;
-  --glow:      rgba(255, 45, 149, 0.35);
+html[data-theme='miami'] {
+  --bg: #0d0221;
+  --surface: #150535;
+  --text: #e0def4;
+  --text-dim: #908caa;
+  --accent: #ff2d95;
+  --accent-2: #00f0ff;
+  --accent-3: #ffe156;
+  --border: #2a1a4e;
+  --bg-deep: #050110;
+  --surface2: #2a1a4e;
+  --accent2: #00f0ff;
+  --text-muted: #908caa;
+  --glow: rgba(255, 45, 149, 0.35);
 }
 
-/* Matcha */
-[data-theme="matcha"] {
-  --bg:        #1c1a17;
-  --bg-deep:   #121110;
-  --surface:   #2a2722;
-  --surface2:  #363229;
-  --border:    #4a4438;
-  --text:      #e8e0d0;
-  --text-muted:#7d7668;
-  --accent:    #8db660;
-  --accent2:   #d4a852;
-  --glow:      rgba(141, 182, 96, 0.35);
+html[data-theme='matcha'] {
+  --bg: #1c1a17;
+  --surface: #252320;
+  --text: #d4be98;
+  --text-dim: #7c6f64;
+  --accent: #8db660;
+  --accent-2: #d4be98;
+  --accent-3: #a9b665;
+  --border: #3c3836;
+  --bg-deep: #121110;
+  --surface2: #3c3836;
+  --accent2: #d4be98;
+  --text-muted: #7c6f64;
+  --glow: rgba(141, 182, 96, 0.35);
 }
 
-/* Gruvbox */
-[data-theme="gruvbox"] {
-  --bg:        #282828;
-  --bg-deep:   #1d2021;
-  --surface:   #3c3836;
-  --surface2:  #504945;
-  --border:    #504945;
-  --text:      #ebdbb2;
-  --text-muted:#928374;
-  --accent:    #fb4934;
-  --accent2:   #fe8019;
-  --glow:      rgba(251, 73, 52, 0.35);
+html[data-theme='gruvbox'] {
+  --bg: #282828;
+  --surface: #3c3836;
+  --text: #ebdbb2;
+  --text-dim: #928374;
+  --accent: #fb4934;
+  --accent-2: #fabd2f;
+  --accent-3: #b8bb26;
+  --border: #504945;
+  --bg-deep: #1d2021;
+  --surface2: #504945;
+  --accent2: #fabd2f;
+  --text-muted: #928374;
+  --glow: rgba(251, 73, 52, 0.35);
 }

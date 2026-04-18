@@ -1,38 +1,42 @@
-import { applyTheme, type ThemeId } from '../lib/theme'
+import { useState, useEffect } from 'react'
 
-const THEMES: { id: ThemeId; label: string; accent: string; accent2: string }[] = [
-  { id: 'tokyo',   label: 'Tokyo Night', accent: '#73daca', accent2: '#7aa2f7' },
-  { id: 'miami',   label: 'Miami',       accent: '#ff2d95', accent2: '#00f0ff' },
-  { id: 'matcha',  label: 'Matcha',      accent: '#8db660', accent2: '#d4a852' },
-  { id: 'gruvbox', label: 'Gruvbox',     accent: '#fb4934', accent2: '#fe8019' },
-]
+const THEMES = [
+  { id: 'tokyo', label: 'Tokyo Night', color: '#73daca' },
+  { id: 'miami', label: 'Miami', color: '#ff2d95' },
+  { id: 'matcha', label: 'Matcha', color: '#8db660' },
+  { id: 'gruvbox', label: 'Gruvbox', color: '#fb4934' },
+] as const
+
+type ThemeId = (typeof THEMES)[number]['id']
+
+const STORAGE_KEY = 'site-theme'
 
 export function ThemePicker() {
-  const current = (document.documentElement.getAttribute('data-theme') ?? 'tokyo') as ThemeId
+  const [active, setActive] = useState<ThemeId>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) as ThemeId | null
+    if (stored && THEMES.some((t) => t.id === stored)) return stored
+    return 'tokyo'
+  })
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', active)
+    localStorage.setItem(STORAGE_KEY, active)
+  }, [active])
 
   return (
-    <div
-      className="fixed top-3 right-3 z-50 flex items-center gap-1.5 rounded-full border px-2 py-1.5 backdrop-blur-sm"
-      style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--surface) 80%, transparent)' }}
-      role="group"
-      aria-label="Color theme"
-    >
-      {THEMES.map((t) => (
+    <div className="flex items-center gap-2" aria-label="Theme picker">
+      {THEMES.map((theme) => (
         <button
-          key={t.id}
+          key={theme.id}
           type="button"
-          onClick={() => {
-            applyTheme(t.id)
-            document.documentElement.dispatchEvent(new Event('themechange'))
-          }}
-          title={t.label}
-          aria-label={`${t.label} theme`}
-          aria-pressed={current === t.id}
-          style={{
-            background: `linear-gradient(135deg, ${t.accent} 50%, ${t.accent2} 50%)`,
-          }}
-          className={`h-5 w-5 rounded-full border-2 transition-transform hover:scale-110 ${
-            current === t.id ? 'border-white' : 'border-transparent'
+          title={theme.label}
+          aria-label={`Switch to ${theme.label} theme`}
+          onClick={() => setActive(theme.id)}
+          style={{ backgroundColor: theme.color }}
+          className={`h-5 w-5 rounded-full transition-transform hover:scale-110 focus:outline-none ${
+            active === theme.id
+              ? 'ring-2 ring-white/70 ring-offset-2 ring-offset-[var(--bg)] scale-110'
+              : 'opacity-70 hover:opacity-100'
           }`}
         />
       ))}

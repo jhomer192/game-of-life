@@ -8,13 +8,8 @@
     <meta name="description" content="Conway's Game of Life - an interactive cellular automaton playground." />
     <title>Conway's Game of Life</title>
     <script>
-      (function () {
-        var OLD = ['mocha', 'tokyo-night', 'dracula', 'nord', 'forest'];
-        var theme = 'tokyo';
-        try { var s = localStorage.getItem('site-theme'); if (s && OLD.indexOf(s) === -1) theme = s; } catch (e) {}
-        document.documentElement.setAttribute('data-theme', theme);
-      })();
-    </script>
+(function(){var s=localStorage.getItem('site-theme');if(s)document.documentElement.setAttribute('data-theme',s)})();
+</script>
   </head>
   <body>
     <div id="root"></div>
