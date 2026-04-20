@@ -9,7 +9,7 @@ import {
   stepTurfWars,
   type Grid,
 } from '../lib/grid'
-import { PATTERNS, patternBounds, type Pattern } from '../lib/patterns'
+import { PATTERNS, parseRLE, patternBounds, type Pattern } from '../lib/patterns'
 
 const TURF_TEAMS = [
   { id: 1,  name: 'Sky',     color: '#38bdf8' },
@@ -517,6 +517,14 @@ export function GameOfLife() {
           setTurfWars={setTurfWars}
           paintTeam={paintTeam}
           setPaintTeam={setPaintTeam}
+          onImportRLE={(text) => {
+            const pattern = parseRLE(text)
+            const { width, height } = patternBounds(pattern)
+            if (width > cols || height > rows) {
+              throw new Error(`Pattern is ${width}x${height}, larger than the ${cols}x${rows} grid. Pick a bigger size preset.`)
+            }
+            loadPattern(pattern)
+          }}
         />
 
         <div
@@ -636,6 +644,7 @@ interface ToolbarProps {
   setTurfWars: (v: boolean) => void
   paintTeam: number
   setPaintTeam: (t: number) => void
+  onImportRLE: (text: string) => void
 }
 
 function Toolbar({
@@ -657,7 +666,21 @@ function Toolbar({
   setTurfWars,
   paintTeam,
   setPaintTeam,
+  onImportRLE,
 }: ToolbarProps) {
+  const [rleOpen, setRleOpen] = useState(false)
+  const [rleText, setRleText] = useState('')
+  const [rleError, setRleError] = useState<string | null>(null)
+  const handleRleImport = () => {
+    try {
+      onImportRLE(rleText)
+      setRleOpen(false)
+      setRleText('')
+      setRleError(null)
+    } catch (err) {
+      setRleError(err instanceof Error ? err.message : 'Failed to parse RLE')
+    }
+  }
   return (
     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       <button className={`btn btn-primary`} onClick={onToggleRun} aria-label={running ? 'Pause' : 'Play'}>
@@ -730,6 +753,16 @@ function Toolbar({
             ))}
           </select>
         </label>
+
+        <button
+          type="button"
+          onClick={() => setRleOpen(true)}
+          className="rounded-md border px-2 py-1 text-xs transition-colors"
+          style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text-muted)' }}
+          title="Paste a Run-Length Encoded pattern from conwaylife.com"
+        >
+          Import RLE
+        </button>
 
         <div
           className="inline-flex overflow-hidden rounded-md border text-xs"
@@ -830,6 +863,58 @@ function Toolbar({
           Turf Wars
         </label>
       </div>
+
+      {rleOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setRleOpen(false)}
+        >
+          <div
+            className="w-full max-w-lg rounded-lg border p-4 shadow-xl"
+            style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-2 text-sm font-semibold" style={{ color: 'var(--text)' }}>
+              Import RLE pattern
+            </h3>
+            <p className="mb-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+              Paste a Run-Length Encoded pattern (from conwaylife.com/wiki or a .rle file).
+              The pattern will replace the current grid.
+            </p>
+            <textarea
+              value={rleText}
+              onChange={(e) => setRleText(e.target.value)}
+              placeholder={`#N Example\nx = 3, y = 3\nbob$2bo$3o!`}
+              rows={8}
+              className="w-full rounded-md border px-2 py-1 font-mono text-xs outline-none"
+              style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text)' }}
+            />
+            {rleError && (
+              <p className="mt-2 text-xs" style={{ color: '#f87171' }}>{rleError}</p>
+            )}
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setRleOpen(false); setRleText(''); setRleError(null) }}
+                className="rounded-md border px-3 py-1 text-xs transition-colors"
+                style={{ borderColor: 'var(--border)', backgroundColor: 'var(--surface2)', color: 'var(--text-muted)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRleImport}
+                disabled={!rleText.trim()}
+                className="rounded-md border px-3 py-1 text-xs transition-colors disabled:opacity-50"
+                style={{ borderColor: 'var(--accent)', backgroundColor: 'color-mix(in srgb, var(--accent) 25%, transparent)', color: 'var(--text)' }}
+              >
+                Load pattern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

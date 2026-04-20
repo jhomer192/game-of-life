@@ -177,3 +177,62 @@ export function patternBounds(pattern: Pattern): { width: number; height: number
   }
   return { width: maxX + 1, height: maxY + 1 }
 }
+
+// Parse a Run-Length Encoded pattern (the standard Conway's Life format).
+// Ref: https://conwaylife.com/wiki/Run_Length_Encoded
+// Lines starting with '#' are comments ('#N name', '#C desc' are recognized).
+// An 'x = N, y = N' header line is skipped. The body is runs of 'b' (dead),
+// 'o' (alive), '$' (end of row), terminated by '!'. Digits before a tag are
+// run-lengths.
+export function parseRLE(text: string): Pattern {
+  let name = 'Imported'
+  let description = ''
+  const bodyLines: string[] = []
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim()
+    if (!line) continue
+    if (line.startsWith('#N')) name = line.slice(2).trim() || name
+    else if (line.startsWith('#C') || line.startsWith('#c')) {
+      const chunk = line.slice(2).trim()
+      description = description ? `${description} ${chunk}` : chunk
+    }
+    else if (line.startsWith('#')) continue
+    else if (/^\s*x\s*=/.test(line)) continue
+    else bodyLines.push(line)
+  }
+  const body = bodyLines.join('').replace(/\s+/g, '')
+  const cells: Array<[number, number]> = []
+  let x = 0
+  let y = 0
+  let run = 0
+  for (const ch of body) {
+    if (ch === '!') break
+    if (ch >= '0' && ch <= '9') {
+      run = run * 10 + (ch.charCodeAt(0) - 48)
+    } else if (ch === 'b' || ch === 'o') {
+      const n = run || 1
+      if (ch === 'o') {
+        for (let i = 0; i < n; i++) cells.push([x + i, y])
+      }
+      x += n
+      run = 0
+    } else if (ch === '$') {
+      const n = run || 1
+      y += n
+      x = 0
+      run = 0
+    }
+    // Anything else (including unknown tags) is skipped
+  }
+  if (cells.length === 0) throw new Error('No live cells found in RLE')
+  // Normalize so the pattern's top-left is at (0,0)
+  let minX = Infinity
+  let minY = Infinity
+  for (const [cx, cy] of cells) {
+    if (cx < minX) minX = cx
+    if (cy < minY) minY = cy
+  }
+  const normalized = cells.map(([cx, cy]) => [cx - minX, cy - minY] as [number, number])
+  const id = `rle-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'imported'}`
+  return { id, name, description: description || `Imported RLE pattern (${cells.length} cells)`, cells: normalized }
+}
