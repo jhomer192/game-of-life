@@ -10,6 +10,7 @@ import {
   type Grid,
 } from '../lib/grid'
 import { PATTERNS, parseRLE, patternBounds, type Pattern } from '../lib/patterns'
+import { track } from '../lib/analytics'
 
 const TURF_TEAMS = [
   { id: 1,  name: 'Sky',     color: '#38bdf8' },
@@ -91,6 +92,18 @@ export function GameOfLife() {
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   const [running, setRunning] = useState(false)
+  // Fires once per session, the first time the board is actually set running —
+  // a static grid on screen is not use.
+  const startedRef = useRef(false)
+  const toggleRun = useCallback(() => {
+    setRunning((r) => {
+      if (!r && !startedRef.current) {
+        startedRef.current = true
+        track('simulation-started')
+      }
+      return !r
+    })
+  }, [])
   const runningRef = useRef(running)
   useEffect(() => {
     runningRef.current = running
@@ -437,7 +450,7 @@ export function GameOfLife() {
       }
       if (e.key === ' ') {
         e.preventDefault()
-        setRunning((r) => !r)
+        toggleRun()
       } else if (e.key.toLowerCase() === 's') {
         if (!runningRef.current) doStep()
       } else if (e.key.toLowerCase() === 'c') {
@@ -500,7 +513,7 @@ export function GameOfLife() {
       <div className="flex flex-col gap-4 rounded-2xl border p-3 backdrop-blur-sm sm:p-4" style={{ borderColor: 'var(--border)', backgroundColor: 'color-mix(in srgb, var(--surface) 60%, transparent)', boxShadow: '0 0 40px -15px var(--glow)' }}>
         <Toolbar
           running={running}
-          onToggleRun={() => setRunning((r) => !r)}
+          onToggleRun={toggleRun}
           onStep={doStep}
           onClear={doClear}
           onRandomize={doRandomize}
