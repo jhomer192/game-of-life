@@ -602,6 +602,17 @@ export function GameOfLife() {
           </p>
         )}
       </section>
+
+      <footer className="text-center text-xs" style={{ color: 'var(--text-dim)' }}>
+        Built by{' '}
+        <a href="https://jackhomer.com" className="underline">
+          Jack Homer
+        </a>
+        {' · '}
+        <a href="https://jackhomer.com/projects/game-of-life/" className="underline">
+          Project write-up
+        </a>
+      </footer>
     </div>
   )
 }

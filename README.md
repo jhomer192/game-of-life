@@ -3,7 +3,7 @@
 An interactive, canvas-based implementation of Conway's Game of Life.
 Built with Vite, React, TypeScript, and Tailwind CSS.
 
-Live demo: https://jhomer192.github.io/game-of-life/
+Live demo: https://jackhomer.com/game-of-life/
 
 ## Features
 
@@ -46,7 +46,7 @@ npm run deploy
 
 That runs the build, writes `dist/.nojekyll`, and force-pushes the output to
 `gh-pages`. GitHub Pages serves the site from that branch at
-<https://jhomer192.github.io/game-of-life/>.
+<https://jackhomer.com/game-of-life/>.
 
 A ready-to-use GitHub Actions workflow lives at `.github/workflows/deploy.yml`
 (kept locally and gitignored). To switch to push-to-main automatic deploys,
