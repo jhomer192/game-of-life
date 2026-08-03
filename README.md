@@ -1,55 +1,36 @@
 # Conway's Game of Life
 
-An interactive, canvas-based implementation of Conway's Game of Life.
-Built with Vite, React, TypeScript, and Tailwind CSS.
+Conway's Game of Life in the browser. Paint cells on a grid, drop in a known pattern, and watch what four rules do with it.
 
-Live demo: https://jackhomer.com/game-of-life/
+Live at **https://jackhomer.com/game-of-life/**
 
-## Features
+![A pattern running on the grid](https://jackhomer.com/screenshots/game-of-life.webp)
 
-- 60fps canvas renderer backed by a `Uint8Array` grid and a reused scratch buffer
-- Play / Pause / Step / Clear / Randomize controls
-- Speed slider (1-60 generations per second)
-- Four grid sizes from 60x36 up to 180x108
-- Click to toggle cells, drag to paint or erase
-- Pattern library: Glider, Lightweight Spaceship, Pulsar, Pentadecathlon, R-pentomino, and the Gosper Glider Gun
-- Stats overlay: generation, live cell count, FPS, grid size
-- Keyboard shortcuts: `Space` play/pause, `S` step, `R` randomize, `C` clear
+## What it does
 
-The grid wraps toroidally, so spaceships glide forever.
+Play, pause, single-step, randomize, or clear. Speed runs from 1 to 60 generations per second and is decoupled from the display refresh rate, so the slider changes the simulation rather than the animation. Grids come in four sizes, from 60x36 to 180x108, and wrap at the edges: a glider that leaves the right side returns on the left.
 
-## Rules
+Click a cell to toggle it, or drag to paint or erase a run of them. The pattern menu drops a Glider, Lightweight Spaceship, Pulsar, Pentadecathlon, R-pentomino, or Gosper Glider Gun onto the middle of the grid. Import RLE reads a run-length-encoded pattern pasted from conwaylife.com and stamps that instead.
 
-Classic `B3/S23`:
+Turf Wars changes the rule set. Cells belong to one of ten colored teams, and only same-team neighbors count toward survival and birth, so factions grow into each other and take ground.
 
-- A live cell with 2 or 3 live neighbors survives; otherwise it dies.
-- A dead cell with exactly 3 live neighbors becomes alive.
+A readout above the grid tracks the generation number, live cell count, frame rate, and grid size. Space plays and pauses, `S` steps while paused, `R` randomizes, `C` clears.
 
-## Development
+## The rules
 
-```bash
+B3/S23. A live cell with two or three live neighbors survives. A dead cell with exactly three live neighbors is born. Everything else dies or stays dead.
+
+## Running it locally
+
+```sh
 npm install
-npm run dev      # start Vite dev server
-npm run build    # type-check and build to dist/
-npm run preview  # preview the production build locally
-npm run lint     # run ESLint
+npm run dev
 ```
 
-## Deployment
+`npm run build` type-checks and bundles into `dist/`, `npm run preview` serves that build, and `npm run lint` runs ESLint. `npm run deploy` pushes `dist/` to the `gh-pages` branch, which is what GitHub Pages serves.
 
-This repo is published to GitHub Pages from the `gh-pages` branch. To cut a
-new release:
+## Stack
 
-```bash
-npm run deploy
-```
+Vite, React, TypeScript, and Tailwind CSS. The grid is a flat `Uint8Array` stepped into a reused scratch buffer, so advancing a generation allocates nothing, and the whole grid is drawn to a canvas.
 
-That runs the build, writes `dist/.nojekyll`, and force-pushes the output to
-`gh-pages`. GitHub Pages serves the site from that branch at
-<https://jackhomer.com/game-of-life/>.
-
-A ready-to-use GitHub Actions workflow lives at `.github/workflows/deploy.yml`
-(kept locally and gitignored). To switch to push-to-main automatic deploys,
-re-authenticate the `gh` CLI with the `workflow` scope (`gh auth refresh -s
-workflow`), commit the workflow file, and switch the Pages source to
-"GitHub Actions" under repository Settings -> Pages.
+Write-up: https://jackhomer.com/projects/game-of-life/
